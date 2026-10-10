@@ -1540,13 +1540,17 @@ bool State::convertVertexShaderSourceToOsgBuiltIns(std::string& source) const
         if (glslVersion >= 130) attributeQualifier = "in ";
         // found the string, now find the next linefeed and set the insertion point after it.
         declPos = source.find( '\n', declPos );
+#if defined(OSG_GLES3_AVAILABLE)//add by herry fix the problem: no default precision defined for variable 'osg_MultiTexCoord0'
+        declPos = source.find("precision", declPos);
+        declPos = source.find( '\n', declPos );
+#endif
         declPos = declPos != std::string::npos ? declPos+1 : source.length();
     }
     else
     {
         declPos = 0;
     }
-
+#if !defined(OSG_GLES3_AVAILABLE)//dd by herry gl 下可以直接放在后面 但gles中要跟在precision highp float后面
     std::string::size_type extPos = source.rfind( "#extension " );
     if ( extPos != std::string::npos )
     {
@@ -1554,6 +1558,7 @@ bool State::convertVertexShaderSourceToOsgBuiltIns(std::string& source) const
         declPos = source.find( '\n', extPos );
         declPos = declPos != std::string::npos ? declPos+1 : source.length();
     }
+#endif
     if (_useModelViewAndProjectionUniforms)
     {
         // replace ftransform as it only works with built-ins
